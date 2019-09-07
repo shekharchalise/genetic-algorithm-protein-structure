@@ -1,11 +1,11 @@
 var populationSize = 1;
-var proteinLength = 10;
+var proteinLength = 20;
 
 $(document).ready(function() {
-  console.log('document loaded');
-
   coordinates = getRandomOrientation();
-  plotGraph(coordinates);
+  label = generateRandomPopulation(proteinLength);
+  colors = getColorsForProtein(label);
+  plotGraph(coordinates, colors);
   // var test = generateRandomPopulation(5);
   // console.log(test);
 });
@@ -92,7 +92,7 @@ function getRandomOrientation() {
 
     for (j = 1; j <= i - 1; j++) {
       if (newX == X[j] && newY == Y[j]) {
-        flag = 1;
+        flag = 1; // goto first jump
         if (flag == 1) {
           flag = 0;
           step2 = 6 - temp1;
@@ -127,7 +127,7 @@ function getRandomOrientation() {
 
           for (j = 1; j <= i - 1; j++) {
             if (newX == X[j] && newY == Y[j]) {
-              flag = 1;
+              flag = 1; // goto second jump
               if (flag == 1) {
                 flag = 0;
                 presentDirection = temp3;
@@ -144,10 +144,10 @@ function getRandomOrientation() {
           }
         }
       }
+      previousDirection = a[presentDirection];
+      X[i] = X[i - 1] + Ax[presentDirection];
+      Y[i] = Y[i - 1] + Ay[presentDirection];
     }
-    previousDirection = a[presentDirection];
-    X[i] = X[i - 1] + Ax[presentDirection];
-    Y[i] = Y[i - 1] + Ay[presentDirection];
   }
   return [X, Y];
 }
@@ -157,22 +157,24 @@ function generateRandomNumber(limit) {
 }
 
 function generateRandomPopulation(length) {
-  var result = '';
+  var result = [];
   var characters = 'hp';
   var charactersLength = characters.length;
   for (var i = 0; i < length; i++) {
-    result += characters.charAt(Math.floor(Math.random() * charactersLength));
+    result[i] = characters.charAt(Math.floor(Math.random() * charactersLength));
   }
   return result;
 }
 
-function plotGraph(coordinates) {
+function plotGraph(coordinates, colors) {
   var trace3 = {
     x: coordinates[0],
     y: coordinates[1],
+    mode: 'lines+markers',
     type: 'scatter',
     marker: {
-      size: 14
+      size: 20,
+      color: colors
     }
   };
 
@@ -180,4 +182,17 @@ function plotGraph(coordinates) {
   var layout = {};
 
   Plotly.newPlot('graphDiv', data, layout, { showSendToCloud: true });
+}
+
+function getColorsForProtein(labels) {
+  colors = [];
+  for (i = 0; i <= labels.length; i++) {
+    if (labels[i] == 'h') {
+      colors[i] = 5;
+    } else {
+      colors[i] = 6;
+    }
+  }
+  console.log(labels, colors);
+  return colors;
 }
