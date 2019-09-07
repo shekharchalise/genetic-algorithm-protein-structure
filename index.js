@@ -1,11 +1,11 @@
 var populationSize = 1;
-var proteinLength = 20;
+var proteinLength = 50;
 
 $(document).ready(function() {
   coordinates = getRandomOrientation();
   label = generateRandomPopulation(proteinLength);
   colors = getColorsForProtein(label);
-  plotGraph(coordinates, colors);
+  plotGraph(coordinates, colors, label);
   // var test = generateRandomPopulation(5);
   // console.log(test);
 });
@@ -166,11 +166,12 @@ function generateRandomPopulation(length) {
   return result;
 }
 
-function plotGraph(coordinates, colors) {
+function plotGraph(coordinates, colors, label) {
   var trace3 = {
     x: coordinates[0],
     y: coordinates[1],
-    mode: 'lines+markers',
+    text: label,
+    mode: 'lines+markers+text',
     type: 'scatter',
     marker: {
       size: 20,
@@ -188,11 +189,10 @@ function getColorsForProtein(labels) {
   colors = [];
   for (i = 0; i <= labels.length; i++) {
     if (labels[i] == 'h') {
-      colors[i] = 5;
+      colors[i] = 15;
     } else {
-      colors[i] = 6;
+      colors[i] = 4;
     }
   }
-  console.log(labels, colors);
   return colors;
 }
