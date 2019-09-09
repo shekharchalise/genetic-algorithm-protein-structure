@@ -1,12 +1,23 @@
-var populationSize = 1;
-var proteinLength = 30;
+var populationSize = 100;
+var proteinLength = 64;
+var population = [];
 
 $(document).ready(function() {
-  coordinates = getRandomOrientation();
-  label = generateRandomPopulation(proteinLength);
-  colors = getColorsForProtein(label);
-  plotGraph(coordinates, colors, label);
-  fitness = computeFitness(coordinates[0], coordinates[1], label);
+  for (pop = 0; pop < populationSize; pop++) {
+    coordinates = getRandomOrientation();
+    label = generateRandomPopulation(proteinLength);
+    fitness = computeFitness(coordinates[0], coordinates[1], label);
+    individualPopulation = {};
+    individualPopulation['X'] = coordinates[0];
+    individualPopulation['Y'] = coordinates[1];
+    individualPopulation['label'] = label;
+    individualPopulation['fitness'] = fitness;
+    population.push(individualPopulation);
+  }
+  fitest = getPopulationWithMaxFitness(population);
+  colors = getColorsForProtein(fitest.label);
+  plotGraph([fitest.X, fitest.Y], colors, fitest.label);
+  console.log(fitest.fitness);
 });
 
 function getRandomOrientation() {
@@ -165,6 +176,88 @@ function generateRandomPopulation(length) {
   return result;
 }
 
+function getColorsForProtein(labels) {
+  colors = [];
+  for (i = 0; i <= labels.length; i++) {
+    if (labels[i] == 'h') {
+      colors[i] = 5;
+    } else {
+      colors[i] = 4;
+    }
+  }
+  return colors;
+}
+
+function computeFitness(X, Y, labels) {
+  individualProtein = getXYCoordinates(X, Y, labels);
+  backTraverse = {};
+  counter = 0;
+  for (i = 0; i < labels.length; i++) {
+    if (labels[i] == 'h') {
+      x = X[i];
+      y = Y[i];
+      cord = x + ',' + y;
+      possibleNeighbors = getPossibleCoordinates(X[i], Y[i]);
+      for (j = 0; j < possibleNeighbors.length; j++) {
+        nx = possibleNeighbors[j][0];
+        ny = possibleNeighbors[j][1];
+        ncord = nx + ',' + ny;
+        if (!individualProtein[ncord]) {
+          continue;
+        }
+        if (backTraverse[ncord]) {
+          continue;
+        }
+        if (Math.abs(individualProtein[cord][1] - individualProtein[ncord][1]) == 1) {
+          continue;
+        }
+        if (individualProtein[ncord][0] != 'h') {
+          continue;
+        }
+        counter++;
+      }
+      backTraverse[cord] = true;
+    }
+  }
+  return counter;
+}
+
+function getPopulationWithMaxFitness(population) {
+  var max = 0;
+  var index = 0;
+  population.forEach((value, i) => {
+    if (value.fitness > max) {
+      max = value.fitness;
+      index = i;
+    }
+  });
+  return population[index];
+}
+
+function getXYCoordinates(X, Y, labels) {
+  coordinatesXY = {};
+  for (i = 0; i < labels.length; i++) {
+    coordinatesXY[X[i] + ',' + Y[i]] = [labels[i], i];
+  }
+  return coordinatesXY;
+}
+
+function getHydrophobicProteinCoordinates(X, Y, labels) {
+  HX = [];
+  HY = [];
+  for (i = 0; i < labels.length; i++) {
+    if (labels[i] == 'h') {
+      HX.push(X[i]);
+      HY.push(Y[i]);
+    }
+  }
+  return [HX, HY];
+}
+
+function getPossibleCoordinates(X, Y) {
+  return [[X, Y + 1], [X + 1, Y], [X, Y - 1], [X - 1, Y]];
+}
+
 function plotGraph(coordinates, colors, label) {
   var trace3 = {
     x: coordinates[0],
@@ -182,69 +275,4 @@ function plotGraph(coordinates, colors, label) {
   var layout = {};
 
   Plotly.newPlot('graphDiv', data, layout, { showSendToCloud: true });
-}
-
-function getColorsForProtein(labels) {
-  colors = [];
-  for (i = 0; i <= labels.length; i++) {
-    if (labels[i] == 'h') {
-      colors[i] = 5;
-    } else {
-      colors[i] = 4;
-    }
-  }
-  return colors;
-}
-
-function computeFitness(X, Y, labels) {
-  test = {};
-  for (i = 0; i < labels.length; i++) {
-    test[X[i] + ',' + Y[i]] = [labels[i], i];
-  }
-  backTraverse = {};
-  counter = 0;
-  for (i = 0; i < labels.length; i++) {
-    if (labels[i] == 'h') {
-      x = X[i];
-      y = Y[i];
-      cord = x + ',' + y;
-      possibleNeighbors = getPossibleCoordinates(X[i], Y[i]);
-      for (j = 0; j < possibleNeighbors.length; j++) {
-        nx = possibleNeighbors[j][0];
-        ny = possibleNeighbors[j][1];
-        ncord = nx + ',' + ny;
-        if (!test[ncord]) {
-          continue;
-        }
-        if (backTraverse[ncord]) {
-          continue;
-        }
-        if (Math.abs(test[cord][1] - test[ncord][1]) == 1) {
-          continue;
-        }
-        if (test[ncord][0] != 'h') {
-          continue;
-        }
-        counter++;
-      }
-      backTraverse[cord] = true;
-    }
-  }
-  return counter;
-}
-
-function getHydrophobicProteinCoordinates(X, Y, labels) {
-  HX = [];
-  HY = [];
-  for (i = 0; i < labels.length; i++) {
-    if (labels[i] == 'h') {
-      HX.push(X[i]);
-      HY.push(Y[i]);
-    }
-  }
-  return [HX, HY];
-}
-
-function getPossibleCoordinates(X, Y) {
-  return [[X, Y + 1], [X + 1, Y], [X, Y - 1], [X - 1, Y]];
 }
