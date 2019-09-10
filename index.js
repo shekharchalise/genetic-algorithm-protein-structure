@@ -1,8 +1,12 @@
-var populationSize = 1;
-var proteinLength = 30;
+var populationSize = 100;
+var proteinLength = 64;
 var population = [];
 
 $(document).ready(function() {
+  main();
+});
+
+function main() {
   for (pop = 0; pop < populationSize; pop++) {
     var collision = true;
     var coordinates;
@@ -24,11 +28,11 @@ $(document).ready(function() {
     individualPopulation['XY'] = getXYCoordinatesWithLabels(coordinates[0], coordinates[1], label);
     population.push(individualPopulation);
   }
-  fitest = getPopulationWithMaxFitness(population);
-  colors = getColorsForProtein(fitest.label);
-  plotGraph([fitest.X, fitest.Y], colors, fitest.label);
-  // console.log(fitest.fitness, fitest.XY);
-});
+  sortedPopulation = population.sort(sortPopulation);
+  colors = getColorsForProtein(sortedPopulation[0].label);
+  plotGraph([sortedPopulation[0].X, sortedPopulation[0].Y], colors, sortedPopulation[0].label);
+  console.log(sortedPopulation[0].fitness);
+}
 
 function getRandomOrientation() {
   var X = [];
@@ -178,11 +182,23 @@ function findDuplicate(array) {
     for (j = i + 1; j < array.length; j++) {
       if (array[i] == array[j]) {
         duplicate = array[i];
-        console.log(duplicate);
         return duplicate;
       }
     }
   }
+}
+
+function sortPopulation(a, b) {
+  let comparison = 0;
+  const fitnessA = a.fitness;
+  const fitnessB = b.fitness;
+
+  if (fitnessA > fitnessB) {
+    comparison = 1;
+  } else if (fitnessA < fitnessB) {
+    comparison = -1;
+  }
+  return comparison * -1;
 }
 
 function generateRandomNumber(limit) {
