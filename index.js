@@ -1,5 +1,5 @@
 var populationSize = 100;
-var proteinLength = 64;
+var proteinLength = 30;
 var population = [];
 
 $(document).ready(function() {
@@ -162,6 +162,19 @@ function getRandomOrientation() {
   return [X, Y];
 }
 
+function findDuplicate(array) {
+  var duplicate, i, j;
+  for (i = 0; i < array.length - 1; i++) {
+    for (j = i + 1; j < array.length; j++) {
+      if (array[i] == array[j]) {
+        duplicate = array[i];
+        console.log(duplicate);
+        return duplicate;
+      }
+    }
+  }
+}
+
 function generateRandomNumber(limit) {
   return Math.floor(Math.random() * limit + 1);
 }
@@ -189,7 +202,7 @@ function getColorsForProtein(labels) {
 }
 
 function computeFitness(X, Y, labels) {
-  individualProtein = getXYCoordinates(X, Y, labels);
+  individualProtein = getXYCoordinatesWithLabels(X, Y, labels);
   backTraverse = {};
   counter = 0;
   for (i = 0; i < labels.length; i++) {
@@ -234,7 +247,7 @@ function getPopulationWithMaxFitness(population) {
   return population[index];
 }
 
-function getXYCoordinates(X, Y, labels) {
+function getXYCoordinatesWithLabels(X, Y, labels) {
   coordinatesXY = {};
   for (i = 0; i < labels.length; i++) {
     coordinatesXY[X[i] + ',' + Y[i]] = [labels[i], i];
