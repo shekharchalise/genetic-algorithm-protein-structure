@@ -1,10 +1,19 @@
-var populationSize = 100;
+var populationSize = 1;
 var proteinLength = 30;
 var population = [];
 
 $(document).ready(function() {
   for (pop = 0; pop < populationSize; pop++) {
-    coordinates = getRandomOrientation();
+    var collision = true;
+    var coordinates;
+    while (collision) {
+      coordinates = getRandomOrientation();
+      coordPair = getXYCoordinatesWithoutLabels(coordinates[0], coordinates[1]);
+      test = findDuplicate(coordPair);
+      if (typeof test == 'undefined') {
+        break;
+      }
+    }
     label = generateRandomPopulation(proteinLength);
     fitness = computeFitness(coordinates[0], coordinates[1], label);
     individualPopulation = {};
@@ -12,12 +21,13 @@ $(document).ready(function() {
     individualPopulation['Y'] = coordinates[1];
     individualPopulation['label'] = label;
     individualPopulation['fitness'] = fitness;
+    individualPopulation['XY'] = getXYCoordinatesWithLabels(coordinates[0], coordinates[1], label);
     population.push(individualPopulation);
   }
   fitest = getPopulationWithMaxFitness(population);
   colors = getColorsForProtein(fitest.label);
   plotGraph([fitest.X, fitest.Y], colors, fitest.label);
-  console.log(fitest.fitness);
+  // console.log(fitest.fitness, fitest.XY);
 });
 
 function getRandomOrientation() {
@@ -251,6 +261,14 @@ function getXYCoordinatesWithLabels(X, Y, labels) {
   coordinatesXY = {};
   for (i = 0; i < labels.length; i++) {
     coordinatesXY[X[i] + ',' + Y[i]] = [labels[i], i];
+  }
+  return coordinatesXY;
+}
+
+function getXYCoordinatesWithoutLabels(X, Y) {
+  coordinatesXY = [];
+  for (i = 0; i < X.length; i++) {
+    coordinatesXY[i] = X[i] + ',' + Y[i];
   }
   return coordinatesXY;
 }
