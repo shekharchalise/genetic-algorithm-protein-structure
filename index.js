@@ -1,12 +1,21 @@
 var populationSize = 100;
 var proteinLength = 64;
-var population = [];
 
 $(document).ready(function() {
   main();
 });
 
 function main() {
+  population = getPopulation();
+  sortedPopulation = population.sort(sortPopulation);
+  colors = getColorsForProtein(sortedPopulation[0].label);
+  plotGraph([sortedPopulation[0].X, sortedPopulation[0].Y], colors, sortedPopulation[0].label);
+  console.log(sortedPopulation);
+  console.log(sortedPopulation[0].fitness);
+}
+
+function getPopulation() {
+  var population = [];
   for (pop = 0; pop < populationSize; pop++) {
     var collision = true;
     var coordinates;
@@ -28,12 +37,8 @@ function main() {
     individualPopulation['XY'] = getXYCoordinatesWithLabels(coordinates[0], coordinates[1], label);
     population.push(individualPopulation);
   }
-  sortedPopulation = population.sort(sortPopulation);
-  colors = getColorsForProtein(sortedPopulation[0].label);
-  plotGraph([sortedPopulation[0].X, sortedPopulation[0].Y], colors, sortedPopulation[0].label);
-  console.log(sortedPopulation[0].fitness);
+  return population;
 }
-
 function getRandomOrientation() {
   var X = [];
   var Y = [];
