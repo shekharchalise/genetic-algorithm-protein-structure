@@ -1,17 +1,66 @@
-var populationSize = 100;
-var proteinLength = 64;
+var populationSize = 10;
+var proteinLength = 10;
+var eliteRate = 10;
+var crossOverRate = 80;
 
 $(document).ready(function() {
   main();
 });
 
 function main() {
-  population = getPopulation();
-  sortedPopulation = population.sort(sortPopulation);
-  colors = getColorsForProtein(sortedPopulation[0].label);
-  plotGraph([sortedPopulation[0].X, sortedPopulation[0].Y], colors, sortedPopulation[0].label);
-  console.log(sortedPopulation);
-  console.log(sortedPopulation[0].fitness);
+  getPopulation().then((population) => {
+    sortedPopulation = population.sort(sortPopulation);
+    console.log(sortedPopulation);
+    console.log(sortedPopulation[0].fitness);
+    if (sortedPopulation) {
+      generateSecondPopulation(eliteRate, crossOverRate, populationSize, sortedPopulation);
+    }
+    // Plot the graph
+    colors = getColorsForProtein(sortedPopulation[0].label);
+    plotGraph([sortedPopulation[0].X, sortedPopulation[0].Y], colors, sortedPopulation[0].label);
+  });
+}
+
+function generateSecondPopulation(eliteRate, crossOverRate, populationSize, population1) {
+  population2 = getElitePopulation(eliteRate, populationSize, population1);
+  console.log(population2);
+  totalFitnessScore = getSumOfAllFitness(population1);
+  crossOverLoopLimit = ((crossOverRate / 100) * populationSize) / 2;
+  for (cross = 0; cross < crossOverLoopLimit; cross++) {
+    rouletteSelection1 = rouletteWheelSelection(population1, totalFitnessScore);
+    rouletteSelection2 = rouletteWheelSelection(population1, totalFitnessScore);
+    doCrossOver(rouletteSelection1, rouletteSelection2);
+  }
+}
+
+function doCrossOver(individual1, individual2) {
+  console.log(individual1, individual2);
+  randomPoint = generateRandomNumber(individual1.X.length);
+}
+
+function checkForCrossOverCollision(indi1, indi2) {}
+
+function rouletteWheelSelection(genomesArr, totalFitnessScore) {
+  var total = 0;
+  threshold = totalFitnessScore * Math.random();
+  for (var i = 0; i < genomesArr.length; i++) {
+    total += genomesArr[i].fitness;
+    if (total >= threshold) break;
+  }
+  return genomesArr[i];
+}
+
+function getSumOfAllFitness(pop) {
+  sum = 0;
+  pop.forEach((value) => {
+    sum += value.fitness;
+  });
+  return sum;
+}
+
+function getElitePopulation(rate, populationSize, population1) {
+  var elitNumber = Math.ceil((rate / 100) * populationSize);
+  return population1.slice(0, elitNumber);
 }
 
 function getPopulation() {
@@ -37,8 +86,11 @@ function getPopulation() {
     individualPopulation['XY'] = getXYCoordinatesWithLabels(coordinates[0], coordinates[1], label);
     population.push(individualPopulation);
   }
-  return population;
+  return new Promise((resolve, reject) => {
+    resolve(population);
+  });
 }
+
 function getRandomOrientation() {
   var X = [];
   var Y = [];
