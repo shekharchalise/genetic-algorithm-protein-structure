@@ -1,4 +1,4 @@
-var populationSize = 10;
+var populationSize = 20;
 var proteinLength = 10;
 var eliteRate = 10;
 var crossOverRate = 80;
@@ -209,9 +209,10 @@ function generateSecondPopulation(eliteRate, crossOverRate, populationSize, popu
 function doCrossOver(individual1, individual2) {
   collision = true;
   while (collision) {
-    randomPoint = generateRandomNumber(individual1.X.length);
+    randomPoint = generateRandomNumber(individual1.X.length - 1);
     XY1 = combineXYCoordinatesIntoArray(individual1.X, individual1.Y);
     XY2 = combineXYCoordinatesIntoArray(individual2.X, individual2.Y);
+    console.log(randomPoint, XY1, XY2);
     XY1Left = XY1.slice(0, randomPoint);
     XY1Right = XY1.slice(randomPoint);
     XY2Left = XY2.slice(0, randomPoint);
@@ -220,10 +221,20 @@ function doCrossOver(individual1, individual2) {
     LABEL1Right = individual1.label.slice(randomPoint);
     LABEL2Left = individual2.label.slice(0, randomPoint);
     LABEL2Right = individual2.label.slice(randomPoint);
-    newIndividual1 = XY1Left.concat(XY2Right);
-    newIndividual2 = XY2Left.concat(XY1Right);
+
+    difference1 = getDifferenceBetweenCoordinates(XY1Left[XY1Left.length - 1][0], XY1Left[XY1Left.length - 1][1], XY2Right[0][0], XY2Right[0][1]);
+    difference2 = getDifferenceBetweenCoordinates(XY2Left[XY2Left.length - 1][0], XY2Left[XY2Left.length - 1][1], XY1Right[0][0], XY1Right[0][1]);
+    newXY2Right = XY2Right.map((value) => {
+      return [value[0] + difference1[0], value[1] + difference1[1]];
+    });
+    newXY1Right = XY1Right.map((value) => {
+      return [value[0] + difference2[0], value[1] + difference2[1]];
+    });
+    newIndividual1 = XY1Left.concat(newXY2Right);
+    newIndividual2 = XY2Left.concat(newXY1Right);
     newLabel1 = LABEL1Left.concat(LABEL2Right);
     newLabel2 = LABEL2Left.concat(LABEL1Right);
+
     var ind1;
     var ind2;
     if (typeof findDuplicate(newIndividual1) == 'undefined' && typeof findDuplicate(newIndividual2) == 'undefined') {
@@ -231,7 +242,6 @@ function doCrossOver(individual1, individual2) {
       Y1 = [];
       X2 = [];
       Y2 = [];
-      console.log(newIndividual1);
       for (ind = 0; ind < newIndividual1.length; ind++) {
         X1[ind] = newIndividual1[ind][0];
         Y1[ind] = newIndividual1[ind][1];
@@ -260,6 +270,11 @@ function doCrossOver(individual1, individual2) {
 }
 
 function checkForCrossOverCollision(indi1, indi2) {}
+
+function getDifferenceBetweenCoordinates(X1, Y1, X2, Y2) {
+  console.log(X1 - X2, Y1 - Y2, 'dif');
+  return [X1 - X2, Y1 - Y2];
+}
 
 function rouletteWheelSelection(genomesArr, totalFitnessScore) {
   var total = 0;
