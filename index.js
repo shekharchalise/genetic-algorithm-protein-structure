@@ -8,7 +8,7 @@ $(document).ready(function() {
 });
 
 function main() {
-  getPopulation().then((population) => {
+  getPopulation(populationSize, proteinLength).then((population) => {
     sortedPopulation = population.sort(sortPopulation);
     console.log(sortedPopulation);
     console.log(sortedPopulation[0].fitness);
@@ -21,49 +21,7 @@ function main() {
   });
 }
 
-function generateSecondPopulation(eliteRate, crossOverRate, populationSize, population1) {
-  population2 = getElitePopulation(eliteRate, populationSize, population1);
-  console.log(population2);
-  totalFitnessScore = getSumOfAllFitness(population1);
-  crossOverLoopLimit = ((crossOverRate / 100) * populationSize) / 2;
-  for (cross = 0; cross < crossOverLoopLimit; cross++) {
-    rouletteSelection1 = rouletteWheelSelection(population1, totalFitnessScore);
-    rouletteSelection2 = rouletteWheelSelection(population1, totalFitnessScore);
-    doCrossOver(rouletteSelection1, rouletteSelection2);
-  }
-}
-
-function doCrossOver(individual1, individual2) {
-  console.log(individual1, individual2);
-  randomPoint = generateRandomNumber(individual1.X.length);
-}
-
-function checkForCrossOverCollision(indi1, indi2) {}
-
-function rouletteWheelSelection(genomesArr, totalFitnessScore) {
-  var total = 0;
-  threshold = totalFitnessScore * Math.random();
-  for (var i = 0; i < genomesArr.length; i++) {
-    total += genomesArr[i].fitness;
-    if (total >= threshold) break;
-  }
-  return genomesArr[i];
-}
-
-function getSumOfAllFitness(pop) {
-  sum = 0;
-  pop.forEach((value) => {
-    sum += value.fitness;
-  });
-  return sum;
-}
-
-function getElitePopulation(rate, populationSize, population1) {
-  var elitNumber = Math.ceil((rate / 100) * populationSize);
-  return population1.slice(0, elitNumber);
-}
-
-function getPopulation() {
+function getPopulation(populationSize, proteinLength) {
   var population = [];
   for (pop = 0; pop < populationSize; pop++) {
     var collision = true;
@@ -71,8 +29,8 @@ function getPopulation() {
     while (collision) {
       coordinates = getRandomOrientation();
       coordPair = getXYCoordinatesWithoutLabels(coordinates[0], coordinates[1]);
-      test = findDuplicate(coordPair);
-      if (typeof test == 'undefined') {
+      duplicate = findDuplicate(coordPair);
+      if (typeof duplicate == 'undefined') {
         break;
       }
     }
@@ -233,6 +191,99 @@ function getRandomOrientation() {
   return [X, Y];
 }
 
+function generateSecondPopulation(eliteRate, crossOverRate, populationSize, population1) {
+  population2 = getElitePopulation(eliteRate, populationSize, population1);
+  totalFitnessScore = getSumOfAllFitness(population1);
+  crossOverLoopLimit = ((crossOverRate / 100) * populationSize) / 2;
+  var newCrossedOverPopulation = [];
+  for (cross = 0; cross < crossOverLoopLimit; cross++) {
+    rouletteSelection1 = rouletteWheelSelection(population1, totalFitnessScore);
+    rouletteSelection2 = rouletteWheelSelection(population1, totalFitnessScore);
+    crossedOverPopulation = doCrossOver(rouletteSelection1, rouletteSelection2);
+    newCrossedOverPopulation = newCrossedOverPopulation.concat(crossedOverPopulation);
+  }
+  test = population2.concat(newCrossedOverPopulation);
+  console.log(test);
+}
+
+function doCrossOver(individual1, individual2) {
+  collision = true;
+  while (collision) {
+    randomPoint = generateRandomNumber(individual1.X.length);
+    XY1 = combineXYCoordinatesIntoArray(individual1.X, individual1.Y);
+    XY2 = combineXYCoordinatesIntoArray(individual2.X, individual2.Y);
+    XY1Left = XY1.slice(0, randomPoint);
+    XY1Right = XY1.slice(randomPoint);
+    XY2Left = XY2.slice(0, randomPoint);
+    XY2Right = XY2.slice(randomPoint);
+    LABEL1Left = individual1.label.slice(0, randomPoint);
+    LABEL1Right = individual1.label.slice(randomPoint);
+    LABEL2Left = individual2.label.slice(0, randomPoint);
+    LABEL2Right = individual2.label.slice(randomPoint);
+    newIndividual1 = XY1Left.concat(XY2Right);
+    newIndividual2 = XY2Left.concat(XY1Right);
+    newLabel1 = LABEL1Left.concat(LABEL2Right);
+    newLabel2 = LABEL2Left.concat(LABEL1Right);
+    var ind1;
+    var ind2;
+    if (typeof findDuplicate(newIndividual1) == 'undefined' && typeof findDuplicate(newIndividual2) == 'undefined') {
+      X1 = [];
+      Y1 = [];
+      X2 = [];
+      Y2 = [];
+      console.log(newIndividual1);
+      for (ind = 0; ind < newIndividual1.length; ind++) {
+        X1[ind] = newIndividual1[ind][0];
+        Y1[ind] = newIndividual1[ind][1];
+        X2[ind] = newIndividual2[ind][0];
+        Y2[ind] = newIndividual2[ind][1];
+      }
+      console.log(X1, Y1, X2, Y2);
+      ind1 = {
+        X: X1,
+        Y: Y1,
+        label: newLabel1,
+        fitness: computeFitness(X1, Y1, newLabel1),
+        XY: getXYCoordinatesWithLabels(X1, Y1, newLabel1)
+      };
+      ind2 = {
+        X: X2,
+        Y: Y2,
+        label: newLabel2,
+        fitness: computeFitness(X2, Y2, newLabel2),
+        XY: getXYCoordinatesWithLabels(X2, Y2, newLabel2)
+      };
+      break;
+    }
+  }
+  return [ind1, ind2];
+}
+
+function checkForCrossOverCollision(indi1, indi2) {}
+
+function rouletteWheelSelection(genomesArr, totalFitnessScore) {
+  var total = 0;
+  threshold = totalFitnessScore * Math.random();
+  for (var i = 0; i < genomesArr.length; i++) {
+    total += genomesArr[i].fitness;
+    if (total >= threshold) break;
+  }
+  return genomesArr[i];
+}
+
+function getSumOfAllFitness(pop) {
+  sum = 0;
+  pop.forEach((value) => {
+    sum += value.fitness;
+  });
+  return sum;
+}
+
+function getElitePopulation(rate, populationSize, population1) {
+  var elitNumber = Math.ceil((rate / 100) * populationSize);
+  return population1.slice(0, elitNumber);
+}
+
 function findDuplicate(array) {
   var duplicate, i, j;
   for (i = 0; i < array.length - 1; i++) {
@@ -342,6 +393,14 @@ function getXYCoordinatesWithoutLabels(X, Y) {
   coordinatesXY = [];
   for (i = 0; i < X.length; i++) {
     coordinatesXY[i] = X[i] + ',' + Y[i];
+  }
+  return coordinatesXY;
+}
+
+function combineXYCoordinatesIntoArray(X, Y) {
+  coordinatesXY = [];
+  for (i = 0; i < X.length; i++) {
+    coordinatesXY[i] = [X[i], Y[i]];
   }
   return coordinatesXY;
 }
