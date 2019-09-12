@@ -194,7 +194,7 @@ function getRandomOrientation() {
 function generateSecondPopulation(eliteRate, crossOverRate, populationSize, population1) {
   population2 = getElitePopulation(eliteRate, populationSize, population1);
   totalFitnessScore = getSumOfAllFitness(population1);
-  crossOverLoopLimit = ((crossOverRate / 100) * populationSize) / 2;
+  crossOverLoopLimit = (crossOverRate / 100) * populationSize;
   var newCrossedOverPopulation = [];
   for (cross = 0; cross < crossOverLoopLimit; cross++) {
     rouletteSelection1 = rouletteWheelSelection(population1, totalFitnessScore);
@@ -208,81 +208,62 @@ function generateSecondPopulation(eliteRate, crossOverRate, populationSize, popu
 
 function doCrossOver(individual1, individual2) {
   collision = true;
+  // while (collision) {
   randomPoint = generateRandomNumber(individual1.X.length - 1);
   XY1 = combineXYCoordinatesIntoArray(individual1.X, individual1.Y);
   XY2 = combineXYCoordinatesIntoArray(individual2.X, individual2.Y);
-  // console.log(randomPoint, XY1, XY2);
+  console.log(randomPoint, XY1, XY2);
   XY1Left = XY1.slice(0, randomPoint);
   XY1Right = XY1.slice(randomPoint);
-  XY2Left = XY2.slice(0, randomPoint);
   XY2Right = XY2.slice(randomPoint);
   LABEL1Left = individual1.label.slice(0, randomPoint);
-  LABEL1Right = individual1.label.slice(randomPoint);
-  LABEL2Left = individual2.label.slice(0, randomPoint);
   LABEL2Right = individual2.label.slice(randomPoint);
-
-  difference1 = getDifferenceBetweenCoordinates(XY1Right[0][0], XY1Right[0][1], XY2Right[0][0], XY2Right[0][1]);
-  difference2 = getDifferenceBetweenCoordinates(XY2Right[0][0], XY2Right[0][1], XY1Right[0][0], XY1Right[0][1]);
-  // console.log(difference1, difference2);
-  newXY2Right = XY2Right.map((value) => {
-    return [value[0] + difference1[0], value[1] + difference1[1]];
-  });
-  newXY1Right = XY1Right.map((value) => {
-    return [value[0] + difference2[0], value[1] + difference2[1]];
-  });
-  // console.log(newXY2Right, newXY1Right);
-
   newLabel1 = LABEL1Left.concat(LABEL2Right);
-  newLabel2 = LABEL2Left.concat(LABEL1Right);
 
-  newIndividual1 = XY1Left.concat(newXY2Right);
-  newIndividual2 = XY2Left.concat(newXY1Right);
+  difference = getDifferenceBetweenCoordinates(XY1Right[0][0], XY1Right[0][1], XY2Right[0][0], XY2Right[0][1]);
+  newXY2Right = XY2Right.map((value) => {
+    return [value[0] + difference[0], value[1] + difference[1]];
+  });
 
-  var ind1;
-  var ind2;
-  X1 = [];
-  Y1 = [];
-  X2 = [];
-  Y2 = [];
-  for (ind = 0; ind < newIndividual1.length; ind++) {
-    X1[ind] = newIndividual1[ind][0];
-    Y1[ind] = newIndividual1[ind][1];
-    X2[ind] = newIndividual2[ind][0];
-    Y2[ind] = newIndividual2[ind][1];
-  }
-  coordPair1 = getXYCoordinatesWithoutLabels(X1, Y1);
-  coordPair2 = getXYCoordinatesWithoutLabels(X2, Y2);
-  console.log(findDuplicate(coordPair1), findDuplicate(coordPair2));
-  if (typeof findDuplicate(coordPair1) == 'undefined') {
-    ind1 = {
-      X: X1,
-      Y: Y1,
-      label: newLabel1,
-      fitness: computeFitness(X1, Y1, newLabel1),
-      XY: getXYCoordinatesWithLabels(X1, Y1, newLabel1)
-    };
-  } else {
+  checkForCollisionForFirstCrossOver = checkForCollision(XY1Left, newXY2Right);
+  if (checkForCollisionForFirstCrossOver) {
+    // first rotate 90
     rotatenewXY2Right90 = newXY2Right.map((val) => {
-      console.log(newXY2Right[0][0], newXY2Right[0][1], val[0], val[1]);
       return rotate(newXY2Right[0][0], newXY2Right[0][1], val[0], val[1], 90);
     });
-    checkForCollision(XY1Left, rotatenewXY2Right90);
-    console.log('rotat', rotatenewXY2Right90);
-    // rotatenewXY2Right180
-    // rotatenewXY2Right270
-  }
-  if (typeof (findDuplicate(coordPair2) == 'undefined')) {
-    ind2 = {
-      X: X2,
-      Y: Y2,
-      label: newLabel2,
-      fitness: computeFitness(X2, Y2, newLabel2),
-      XY: getXYCoordinatesWithLabels(X2, Y2, newLabel2)
-    };
+    checkForCollisionAfter90 = checkForCollision(XY1Left, rotatenewXY2Right90);
+    if (checkForCollisionAfter90) {
+      // first rotate 180
+      rotatenewXY2Right180 = newXY2Right.map((val) => {
+        return rotate(newXY2Right[0][0], newXY2Right[0][1], val[0], val[1], 180);
+      });
+      checkForCollisionAfter180 = checkForCollision(XY1Left, rotatenewXY2Right180);
+      if (checkForCollisionAfter180) {
+        // first rotate 270
+        rotatenewXY2Right270 = newXY2Right.map((val) => {
+          return rotate(newXY2Right[0][0], newXY2Right[0][1], val[0], val[1], 270);
+        });
+        checkForCollisionAfter270 = checkForCollision(XY1Left, rotatenewXY2Right270);
+        if (checkForCollisionAfter270) {
+          console.log('no');
+          // continue;
+        } else {
+          collision = false;
+          return composeCrossoverReturnStructure(checkForCollisionAfter270.X, checkForCollisionAfter270.Y, newLabel1);
+        }
+      } else {
+        collision = false;
+        return composeCrossoverReturnStructure(checkForCollisionAfter180.X, checkForCollisionAfter180.Y, newLabel1);
+      }
+    } else {
+      collision = false;
+      return composeCrossoverReturnStructure(checkForCollisionAfter90.X, checkForCollisionAfter90.Y, newLabel1);
+    }
   } else {
-    // rotate:
+    collision = false;
+    return composeCrossoverReturnStructure(checkForCollisionForFirstCrossOver.X, checkForCollisionForFirstCrossOver.Y, newLabel1);
   }
-  return [ind1, ind2];
+  // }
 }
 
 function checkForCollision(XYLeft, XYRight) {
@@ -294,10 +275,22 @@ function checkForCollision(XYLeft, XYRight) {
     Y1[ind] = concatinate[ind][1];
   }
   coord = getXYCoordinatesWithoutLabels(X1, Y1);
+  console.log(findDuplicate(coord));
   if (typeof findDuplicate(coord) == 'undefined') {
     return { X: X1, Y: Y1 };
   }
   return true;
+}
+
+function composeCrossoverReturnStructure(X, Y, label) {
+  structure = {
+    X: X,
+    Y: Y,
+    label: label,
+    fitness: computeFitness(X, Y, label),
+    XY: getXYCoordinatesWithLabels(X, Y, label)
+  };
+  return [structure];
 }
 
 function rotate(cx, cy, x, y, angle) {
