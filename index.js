@@ -1,5 +1,5 @@
-var populationSize = 20;
-var proteinLength = 10;
+var populationSize = 10;
+var proteinLength = 20;
 var eliteRate = 10;
 var crossOverRate = 80;
 
@@ -208,71 +208,108 @@ function generateSecondPopulation(eliteRate, crossOverRate, populationSize, popu
 
 function doCrossOver(individual1, individual2) {
   collision = true;
-  while (collision) {
-    randomPoint = generateRandomNumber(individual1.X.length - 1);
-    XY1 = combineXYCoordinatesIntoArray(individual1.X, individual1.Y);
-    XY2 = combineXYCoordinatesIntoArray(individual2.X, individual2.Y);
-    console.log(randomPoint, XY1, XY2);
-    XY1Left = XY1.slice(0, randomPoint);
-    XY1Right = XY1.slice(randomPoint);
-    XY2Left = XY2.slice(0, randomPoint);
-    XY2Right = XY2.slice(randomPoint);
-    LABEL1Left = individual1.label.slice(0, randomPoint);
-    LABEL1Right = individual1.label.slice(randomPoint);
-    LABEL2Left = individual2.label.slice(0, randomPoint);
-    LABEL2Right = individual2.label.slice(randomPoint);
+  randomPoint = generateRandomNumber(individual1.X.length - 1);
+  XY1 = combineXYCoordinatesIntoArray(individual1.X, individual1.Y);
+  XY2 = combineXYCoordinatesIntoArray(individual2.X, individual2.Y);
+  // console.log(randomPoint, XY1, XY2);
+  XY1Left = XY1.slice(0, randomPoint);
+  XY1Right = XY1.slice(randomPoint);
+  XY2Left = XY2.slice(0, randomPoint);
+  XY2Right = XY2.slice(randomPoint);
+  LABEL1Left = individual1.label.slice(0, randomPoint);
+  LABEL1Right = individual1.label.slice(randomPoint);
+  LABEL2Left = individual2.label.slice(0, randomPoint);
+  LABEL2Right = individual2.label.slice(randomPoint);
 
-    difference1 = getDifferenceBetweenCoordinates(XY1Left[XY1Left.length - 1][0], XY1Left[XY1Left.length - 1][1], XY2Right[0][0], XY2Right[0][1]);
-    difference2 = getDifferenceBetweenCoordinates(XY2Left[XY2Left.length - 1][0], XY2Left[XY2Left.length - 1][1], XY1Right[0][0], XY1Right[0][1]);
-    newXY2Right = XY2Right.map((value) => {
-      return [value[0] + difference1[0], value[1] + difference1[1]];
-    });
-    newXY1Right = XY1Right.map((value) => {
-      return [value[0] + difference2[0], value[1] + difference2[1]];
-    });
-    newIndividual1 = XY1Left.concat(newXY2Right);
-    newIndividual2 = XY2Left.concat(newXY1Right);
-    newLabel1 = LABEL1Left.concat(LABEL2Right);
-    newLabel2 = LABEL2Left.concat(LABEL1Right);
+  difference1 = getDifferenceBetweenCoordinates(XY1Right[0][0], XY1Right[0][1], XY2Right[0][0], XY2Right[0][1]);
+  difference2 = getDifferenceBetweenCoordinates(XY2Right[0][0], XY2Right[0][1], XY1Right[0][0], XY1Right[0][1]);
+  // console.log(difference1, difference2);
+  newXY2Right = XY2Right.map((value) => {
+    return [value[0] + difference1[0], value[1] + difference1[1]];
+  });
+  newXY1Right = XY1Right.map((value) => {
+    return [value[0] + difference2[0], value[1] + difference2[1]];
+  });
+  // console.log(newXY2Right, newXY1Right);
 
-    var ind1;
-    var ind2;
-    if (typeof findDuplicate(newIndividual1) == 'undefined' && typeof findDuplicate(newIndividual2) == 'undefined') {
-      X1 = [];
-      Y1 = [];
-      X2 = [];
-      Y2 = [];
-      for (ind = 0; ind < newIndividual1.length; ind++) {
-        X1[ind] = newIndividual1[ind][0];
-        Y1[ind] = newIndividual1[ind][1];
-        X2[ind] = newIndividual2[ind][0];
-        Y2[ind] = newIndividual2[ind][1];
-      }
-      console.log(X1, Y1, X2, Y2);
-      ind1 = {
-        X: X1,
-        Y: Y1,
-        label: newLabel1,
-        fitness: computeFitness(X1, Y1, newLabel1),
-        XY: getXYCoordinatesWithLabels(X1, Y1, newLabel1)
-      };
-      ind2 = {
-        X: X2,
-        Y: Y2,
-        label: newLabel2,
-        fitness: computeFitness(X2, Y2, newLabel2),
-        XY: getXYCoordinatesWithLabels(X2, Y2, newLabel2)
-      };
-      break;
-    }
+  newLabel1 = LABEL1Left.concat(LABEL2Right);
+  newLabel2 = LABEL2Left.concat(LABEL1Right);
+
+  newIndividual1 = XY1Left.concat(newXY2Right);
+  newIndividual2 = XY2Left.concat(newXY1Right);
+
+  var ind1;
+  var ind2;
+  X1 = [];
+  Y1 = [];
+  X2 = [];
+  Y2 = [];
+  for (ind = 0; ind < newIndividual1.length; ind++) {
+    X1[ind] = newIndividual1[ind][0];
+    Y1[ind] = newIndividual1[ind][1];
+    X2[ind] = newIndividual2[ind][0];
+    Y2[ind] = newIndividual2[ind][1];
+  }
+  coordPair1 = getXYCoordinatesWithoutLabels(X1, Y1);
+  coordPair2 = getXYCoordinatesWithoutLabels(X2, Y2);
+  console.log(findDuplicate(coordPair1), findDuplicate(coordPair2));
+  if (typeof findDuplicate(coordPair1) == 'undefined') {
+    ind1 = {
+      X: X1,
+      Y: Y1,
+      label: newLabel1,
+      fitness: computeFitness(X1, Y1, newLabel1),
+      XY: getXYCoordinatesWithLabels(X1, Y1, newLabel1)
+    };
+  } else {
+    rotatenewXY2Right90 = newXY2Right.map((val) => {
+      console.log(newXY2Right[0][0], newXY2Right[0][1], val[0], val[1]);
+      return rotate(newXY2Right[0][0], newXY2Right[0][1], val[0], val[1], 90);
+    });
+    checkForCollision(XY1Left, rotatenewXY2Right90);
+    console.log('rotat', rotatenewXY2Right90);
+    // rotatenewXY2Right180
+    // rotatenewXY2Right270
+  }
+  if (typeof (findDuplicate(coordPair2) == 'undefined')) {
+    ind2 = {
+      X: X2,
+      Y: Y2,
+      label: newLabel2,
+      fitness: computeFitness(X2, Y2, newLabel2),
+      XY: getXYCoordinatesWithLabels(X2, Y2, newLabel2)
+    };
+  } else {
+    // rotate:
   }
   return [ind1, ind2];
 }
 
-function checkForCrossOverCollision(indi1, indi2) {}
+function checkForCollision(XYLeft, XYRight) {
+  X1 = [];
+  Y1 = [];
+  concatinate = XYLeft.concat(XYRight);
+  for (ind = 0; ind < concatinate.length; ind++) {
+    X1[ind] = concatinate[ind][0];
+    Y1[ind] = concatinate[ind][1];
+  }
+  coord = getXYCoordinatesWithoutLabels(X1, Y1);
+  if (typeof findDuplicate(coord) == 'undefined') {
+    return { X: X1, Y: Y1 };
+  }
+  return true;
+}
+
+function rotate(cx, cy, x, y, angle) {
+  var radians = (Math.PI / 180) * angle,
+    cos = Math.cos(radians),
+    sin = Math.sin(radians),
+    nx = cos * (x - cx) + sin * (y - cy) + cx,
+    ny = cos * (y - cy) - sin * (x - cx) + cy;
+  return [Math.round(nx), Math.round(ny)];
+}
 
 function getDifferenceBetweenCoordinates(X1, Y1, X2, Y2) {
-  console.log(X1 - X2, Y1 - Y2, 'dif');
   return [X1 - X2, Y1 - Y2];
 }
 
@@ -438,14 +475,16 @@ function getPossibleCoordinates(X, Y) {
 
 function plotGraph(coordinates, colors, label) {
   var trace3 = {
-    x: coordinates[0],
-    y: coordinates[1],
-    text: label,
+    // x: coordinates[0],
+    // y: coordinates[1],
+    x: [0, 1, 2, 3, 3, 2, 2, 2, 3, 3, 4, 4, 4, 5, 5, 5, 5, 4, 4, 5],
+    y: [0, 0, 0, 0, -1, -1, -2, -3, -3, -2, -2, -1, 0, 0, -1, -2, -3, -3, -2, -2],
+    text: ['p', 'p', 'h', 'p', 'p', 'h', 'p', 'h', 'h', 'h', 'p', 'p', 'h', 'p', 'h', 'p', 'h', 'p', 'p', 'p'],
     mode: 'lines+markers+text',
     type: 'scatter',
     marker: {
       size: 20,
-      color: colors
+      color: getColorsForProtein(['p', 'p', 'h', 'p', 'p', 'h', 'p', 'h', 'h', 'h', 'p', 'p', 'h', 'p', 'h', 'p', 'h', 'p', 'p', 'p'])
     }
   };
 
