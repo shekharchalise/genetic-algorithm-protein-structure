@@ -3,9 +3,13 @@
   <head>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <script src="https://code.jquery.com/jquery-1.9.1.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous" />
+    <title>Genetic Algorithm</title>
     <style>
       body {
         background-color: powderblue;
+        padding: 30px;
       }
       #graphDiv {
         margin: 0 auto;
@@ -15,7 +19,65 @@
     </style>
   </head>
   <body>
-    <div id="graphDiv"></div>
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-md-6">
+          <div class="input-group mb-3">
+            <div class="input-group-prepend">
+              <span class="input-group-text" id="basic-addon1">Number Of Generations</span>
+            </div>
+            <input type="text" class="form-control" value="1000" aria-label="Number of Generations" aria-describedby="basic-addon1" />
+          </div>
+          <div class="input-group mb-3">
+            <div class="input-group-prepend">
+              <span class="input-group-text" id="basic-addon1">Population Size</span>
+            </div>
+            <input type="text" class="form-control" value="100" aria-label="Population Size" aria-describedby="basic-addon1" />
+          </div>
+          <div class="input-group mb-3">
+            <div class="input-group-prepend">
+              <span class="input-group-text" id="basic-addon1">Cross Over Rate</span>
+            </div>
+            <input type="text" class="form-control" value="80" aria-label="Cross Over Rate" aria-describedby="basic-addon1" />
+          </div>
+          <div class="input-group mb-3">
+            <div class="input-group-prepend">
+              <span class="input-group-text" id="basic-addon1">Elite Rate</span>
+            </div>
+            <input type="text" class="form-control" value="10" aria-label="Elite Rate" aria-describedby="basic-addon1" />
+          </div>
+          <div class="input-group mb-3">
+            <div class="input-group-prepend">
+              <span class="input-group-text" id="basic-addon1">Mutation Rate</span>
+            </div>
+            <input type="text" class="form-control" value="50" aria-label="Mutation Rate" aria-describedby="basic-addon1" />
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="input-group mb-3">
+            <div class="input-group-prepend">
+              <span class="input-group-text" id="basic-addon1">Protein Structure</span>
+            </div>
+            <input type="text" class="form-control" value="" aria-label="Protein Structure" aria-describedby="basic-addon1" />
+          </div>
+          <div class="input-group mb-3">
+            <div class="input-group-prepend">
+              <span class="input-group-text" id="inputGroupFileAddon01">Upload</span>
+            </div>
+            <div class="custom-file">
+              <input type="file" class="custom-file-input" id="inputGroupFile01" aria-describedby="inputGroupFileAddon01" />
+              <label class="custom-file-label" for="inputGroupFile01">Choose file</label>
+            </div>
+          </div>
+          <div class="input-group mb-3">
+            <button type="button" class="btn btn-success">Start</button>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div id="graphDiv" class="col-md-12"></div>
+      </div>
+    </div>
   </body>
   <script type="text/javascript" src="./index.js"></script>
 </html>

@@ -15,10 +15,12 @@ function main() {
 
   if (sortedPopulation) {
     crossedOverPop = generateSecondPopulationAfterCrossover(eliteRate, crossOverRate, populationSize, sortedPopulation, label, proteinLength);
-    mutatedPopulation = generateSecondPopulationAfterMutation(crossedOverPop, mutationRate);
+    sortedCrossedOver = crossedOverPop.sort(sortPopulation);
+    console.log(sortedCrossedOver);
+    mutatedPopulation = generateSecondPopulationAfterMutation(sortedCrossedOver, mutationRate);
     // Plot the graph
-    colors = getColorsForProtein(crossedOverPop[0].label);
-    plotGraph([crossedOverPop[0].X, crossedOverPop[0].Y], colors, crossedOverPop[0].label);
+    colors = getColorsForProtein(sortedCrossedOver[0].label);
+    plotGraph([sortedCrossedOver[0].X, sortedCrossedOver[0].Y], colors, sortedCrossedOver[0].label);
   }
 }
 
@@ -266,6 +268,8 @@ function doCrossOver(individual1, individual2) {
   }
   return crossOveredChromosomes;
 }
+
+function generateSecondPopulationAfterMutation(crossedOverPopu, mutationRate) {}
 
 function checkCollison(sequence) {
   combination = generateCoords(sequence);
