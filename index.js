@@ -1,7 +1,8 @@
-var populationSize = 10;
-var proteinLength = 20;
+var populationSize = 100;
+var proteinLength = 64;
 var eliteRate = 10;
 var crossOverRate = 80;
+var mutationRate = 5;
 
 $(document).ready(function() {
   main();
@@ -9,18 +10,16 @@ $(document).ready(function() {
 
 function main() {
   label = generateRandomPopulation(proteinLength);
-  getPopulation(populationSize, proteinLength, label).then((population) => {
-    sortedPopulation = population.sort(sortPopulation);
-    console.log(sortedPopulation);
-    console.log(sortedPopulation[0].fitness);
-    if (sortedPopulation) {
-      test = generateSecondPopulation(eliteRate, crossOverRate, populationSize, sortedPopulation, label, proteinLength);
-      console.log(test);
-    }
+  population = getPopulation(populationSize, proteinLength, label);
+  sortedPopulation = population.sort(sortPopulation);
+
+  if (sortedPopulation) {
+    crossedOverPop = generateSecondPopulationAfterCrossover(eliteRate, crossOverRate, populationSize, sortedPopulation, label, proteinLength);
+    mutatedPopulation = generateSecondPopulationAfterMutation(crossedOverPop, mutationRate);
     // Plot the graph
-    colors = getColorsForProtein(sortedPopulation[0].label);
-    plotGraph([sortedPopulation[0].X, sortedPopulation[0].Y], colors, sortedPopulation[0].label);
-  });
+    colors = getColorsForProtein(crossedOverPop[0].label);
+    plotGraph([crossedOverPop[0].X, crossedOverPop[0].Y], colors, crossedOverPop[0].label);
+  }
 }
 
 function getPopulation(populationSize, proteinLength, label) {
@@ -45,9 +44,10 @@ function getPopulation(populationSize, proteinLength, label) {
     individualPopulation['XY'] = getXYCoordinatesWithLabels(coordinates[0], coordinates[1], label);
     population.push(individualPopulation);
   }
-  return new Promise((resolve, reject) => {
-    resolve(population);
-  });
+  return population;
+  // return new Promise((resolve, reject) => {
+  //   resolve(population);
+  // });
 }
 
 function getRandomOrientation(proteinLength) {
@@ -192,8 +192,9 @@ function getRandomOrientation(proteinLength) {
   return [X, Y];
 }
 
-function generateSecondPopulation(eliteRate, crossOverRate, populationSize, population1, label, proteinLength) {
-  population2 = getElitePopulation(eliteRate, populationSize, population1);
+function generateSecondPopulationAfterCrossover(eliteRate, crossOverRate, populationSize, population1, label, proteinLength) {
+  population2 = [];
+  elitPopulation = getElitePopulation(eliteRate, populationSize, population1);
   totalFitnessScore = getSumOfAllFitness(population1);
   crossOverLoopLimit = (crossOverRate / 100) * populationSize;
   var newCrossedOverPopulation = [];
@@ -210,6 +211,7 @@ function generateSecondPopulation(eliteRate, crossOverRate, populationSize, popu
   newCrossedOverPopulation = newCrossedOverPopulation.map((value) => {
     X = [];
     Y = [];
+    test = [];
     for (v = 0; v < value.length; v++) {
       X[v] = value[v][0];
       Y[v] = value[v][1];
@@ -217,14 +219,20 @@ function generateSecondPopulation(eliteRate, crossOverRate, populationSize, popu
     return { X: X, Y: Y, label: label, fitness: computeFitness(X, Y, label), XY: getXYCoordinatesWithLabels(X, Y, label) };
   });
   sortNewCrossedOverPopulation = newCrossedOverPopulation.sort(sortPopulation);
-  pop = population2.concat(sortNewCrossedOverPopulation.slice(0, crossOverLoopLimit));
+  crossedOverPopu = sortNewCrossedOverPopulation.slice(0, crossOverLoopLimit);
   addRandomPopRate = 100 - eliteRate - crossOverRate;
   noOfRandomPop = (addRandomPopRate / 100) * populationSize;
-  console.log(pop);
-  getPopulation(noOfRandomPop, proteinLength, label).then((val) => {
-    test = pop.concat(val);
-    console.log(test);
+  remainingRandomPopulation = getPopulation(noOfRandomPop, proteinLength, label);
+  elitPopulation.forEach((elite) => {
+    population2.push(elite);
   });
+  crossedOverPopu.forEach((crossed) => {
+    population2.push(crossed);
+  });
+  remainingRandomPopulation.forEach((remains) => {
+    population2.push(remains);
+  });
+  return population2;
 }
 
 function doCrossOver(individual1, individual2) {
@@ -385,19 +393,6 @@ function composeCrossoverReturnStructure(X, Y, label) {
   };
   return [structure];
 }
-
-// function rotate(cx, cy, x, y, angle) {
-//   var radians = (Math.PI / 180) * angle,
-//     cos = Math.cos(radians),
-//     sin = Math.sin(radians),
-//     nx = cos * (x - cx) + sin * (y - cy) + cx,
-//     ny = cos * (y - cy) - sin * (x - cx) + cy;
-//   return [Math.round(nx), Math.round(ny)];
-// }
-
-// function getDifferenceBetweenCoordinates(X1, Y1, X2, Y2) {
-//   return [X1 - X2, Y1 - Y2];
-// }
 
 function rouletteWheelSelection(genomesArr, totalFitnessScore) {
   var total = 0;
@@ -561,16 +556,14 @@ function getPossibleCoordinates(X, Y) {
 
 function plotGraph(coordinates, colors, label) {
   var trace3 = {
-    // x: coordinates[0],
-    // y: coordinates[1],
-    x: [0, 1, 2, 3, 3, 2, 2, 2, 3, 3, 4, 4, 4, 5, 5, 5, 5, 4, 4, 5],
-    y: [0, 0, 0, 0, -1, -1, -2, -3, -3, -2, -2, -1, 0, 0, -1, -2, -3, -3, -2, -2],
-    text: ['p', 'p', 'h', 'p', 'p', 'h', 'p', 'h', 'h', 'h', 'p', 'p', 'h', 'p', 'h', 'p', 'h', 'p', 'p', 'p'],
+    x: coordinates[0],
+    y: coordinates[1],
+    text: label,
     mode: 'lines+markers+text',
     type: 'scatter',
     marker: {
       size: 20,
-      color: getColorsForProtein(['p', 'p', 'h', 'p', 'p', 'h', 'p', 'h', 'h', 'h', 'p', 'p', 'h', 'p', 'h', 'p', 'h', 'p', 'p', 'p'])
+      color: colors
     }
   };
 
@@ -579,67 +572,3 @@ function plotGraph(coordinates, colors, label) {
 
   Plotly.newPlot('graphDiv', data, layout, { showSendToCloud: true });
 }
-
-// function doCrossOver(individual1, individual2) {
-//   collision = true;
-//   // while (collision) {
-//   randomPoint = generateRandomNumber(individual1.X.length - 1);
-//   XY1 = combineXYCoordinatesIntoArray(individual1.X, individual1.Y);
-//   XY2 = combineXYCoordinatesIntoArray(individual2.X, individual2.Y);
-//   console.log(randomPoint, XY1, XY2);
-//   XY1Left = XY1.slice(0, randomPoint);
-//   XY1Right = XY1.slice(randomPoint);
-//   XY2Right = XY2.slice(randomPoint);
-//   LABEL1Left = individual1.label.slice(0, randomPoint);
-//   LABEL2Right = individual2.label.slice(randomPoint);
-//   newLabel1 = LABEL1Left.concat(LABEL2Right);
-
-//   difference = getDifferenceBetweenCoordinates(XY1Right[0][0], XY1Right[0][1], XY2Right[0][0], XY2Right[0][1]);
-//   newXY2Right = XY2Right.map((value) => {
-//     return [value[0] + difference[0], value[1] + difference[1]];
-//   });
-
-//   checkForCollisionForFirstCrossOver = checkForCollision(XY1Left, newXY2Right);
-//   if (checkForCollisionForFirstCrossOver) {
-//     // first rotate 90
-//     rotatenewXY2Right90 = newXY2Right.map((val) => {
-//       return rotate(newXY2Right[0][0], newXY2Right[0][1], val[0], val[1], 90);
-//     });
-//     checkForCollisionAfter90 = checkForCollision(XY1Left, rotatenewXY2Right90);
-//     if (checkForCollisionAfter90) {
-//       // first rotate 180
-//       rotatenewXY2Right180 = newXY2Right.map((val) => {
-//         return rotate(newXY2Right[0][0], newXY2Right[0][1], val[0], val[1], 180);
-//       });
-//       checkForCollisionAfter180 = checkForCollision(XY1Left, rotatenewXY2Right180);
-//       if (checkForCollisionAfter180) {
-//         // first rotate 270
-//         rotatenewXY2Right270 = newXY2Right.map((val) => {
-//           return rotate(newXY2Right[0][0], newXY2Right[0][1], val[0], val[1], 270);
-//         });
-//         checkForCollisionAfter270 = checkForCollision(XY1Left, rotatenewXY2Right270);
-//         if (checkForCollisionAfter270) {
-//           console.log('no');
-//           // continue;
-//         } else {
-//           collision = false;
-//           console.log(checkForCollisionAfter270, '270');
-//           return composeCrossoverReturnStructure(checkForCollisionAfter270.X, checkForCollisionAfter270.Y, newLabel1);
-//         }
-//       } else {
-//         collision = false;
-//         console.log(checkForCollisionAfter180, '180');
-//         return composeCrossoverReturnStructure(checkForCollisionAfter180.X, checkForCollisionAfter180.Y, newLabel1);
-//       }
-//     } else {
-//       collision = false;
-//       console.log(checkForCollisionAfter90, '90');
-//       return composeCrossoverReturnStructure(checkForCollisionAfter90.X, checkForCollisionAfter90.Y, newLabel1);
-//     }
-//   } else {
-//     collision = false;
-//     console.log(checkForCollisionForFirstCrossOver, 'first');
-//     return composeCrossoverReturnStructure(checkForCollisionForFirstCrossOver.X, checkForCollisionForFirstCrossOver.Y, newLabel1);
-//   }
-//   // }
-// }
