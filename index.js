@@ -8,12 +8,14 @@ $(document).ready(function() {
 });
 
 function main() {
-  getPopulation(populationSize, proteinLength).then((population) => {
+  label = generateRandomPopulation(proteinLength);
+  getPopulation(populationSize, proteinLength, label).then((population) => {
     sortedPopulation = population.sort(sortPopulation);
     console.log(sortedPopulation);
     console.log(sortedPopulation[0].fitness);
     if (sortedPopulation) {
-      generateSecondPopulation(eliteRate, crossOverRate, populationSize, sortedPopulation);
+      test = generateSecondPopulation(eliteRate, crossOverRate, populationSize, sortedPopulation, label, proteinLength);
+      console.log(test);
     }
     // Plot the graph
     colors = getColorsForProtein(sortedPopulation[0].label);
@@ -21,20 +23,19 @@ function main() {
   });
 }
 
-function getPopulation(populationSize, proteinLength) {
+function getPopulation(populationSize, proteinLength, label) {
   var population = [];
   for (pop = 0; pop < populationSize; pop++) {
     var collision = true;
     var coordinates;
     while (collision) {
-      coordinates = getRandomOrientation();
+      coordinates = getRandomOrientation(proteinLength);
       coordPair = getXYCoordinatesWithoutLabels(coordinates[0], coordinates[1]);
       duplicate = findDuplicate(coordPair);
       if (typeof duplicate == 'undefined') {
         break;
       }
     }
-    label = generateRandomPopulation(proteinLength);
     fitness = computeFitness(coordinates[0], coordinates[1], label);
     individualPopulation = {};
     individualPopulation['X'] = coordinates[0];
@@ -49,7 +50,7 @@ function getPopulation(populationSize, proteinLength) {
   });
 }
 
-function getRandomOrientation() {
+function getRandomOrientation(proteinLength) {
   var X = [];
   var Y = [];
   var newX = 0;
@@ -191,7 +192,7 @@ function getRandomOrientation() {
   return [X, Y];
 }
 
-function generateSecondPopulation(eliteRate, crossOverRate, populationSize, population1) {
+function generateSecondPopulation(eliteRate, crossOverRate, populationSize, population1, label, proteinLength) {
   population2 = getElitePopulation(eliteRate, populationSize, population1);
   totalFitnessScore = getSumOfAllFitness(population1);
   crossOverLoopLimit = (crossOverRate / 100) * populationSize;
@@ -200,20 +201,34 @@ function generateSecondPopulation(eliteRate, crossOverRate, populationSize, popu
     rouletteSelection1 = rouletteWheelSelection(population1, totalFitnessScore);
     rouletteSelection2 = rouletteWheelSelection(population1, totalFitnessScore);
     crossedOverPopulation = doCrossOver(rouletteSelection1, rouletteSelection2);
-    console.log(crossedOverPopulation);
-    // newCrossedOverPopulation = newCrossedOverPopulation.concat(crossedOverPopulation);
+    if (crossedOverPopulation.length > 0) {
+      crossedOverPopulation.forEach((val, i) => {
+        newCrossedOverPopulation.push(val);
+      });
+    }
   }
-  // test = population2.concat(newCrossedOverPopulation);
-  // console.log(test);
+  newCrossedOverPopulation = newCrossedOverPopulation.map((value) => {
+    X = [];
+    Y = [];
+    for (v = 0; v < value.length; v++) {
+      X[v] = value[v][0];
+      Y[v] = value[v][1];
+    }
+    return { X: X, Y: Y, label: label, fitness: computeFitness(X, Y, label), XY: getXYCoordinatesWithLabels(X, Y, label) };
+  });
+  sortNewCrossedOverPopulation = newCrossedOverPopulation.sort(sortPopulation);
+  pop = population2.concat(sortNewCrossedOverPopulation.slice(0, crossOverLoopLimit));
+  addRandomPopRate = 100 - eliteRate - crossOverRate;
+  noOfRandomPop = (addRandomPopRate / 100) * populationSize;
+  console.log(pop);
+  getPopulation(noOfRandomPop, proteinLength, label).then((val) => {
+    test = pop.concat(val);
+    console.log(test);
+  });
 }
 
 function doCrossOver(individual1, individual2) {
   randomPoint = generateRandomNumber(individual1.X.length - 1);
-
-  LABEL1Left = individual1.label.slice(0, randomPoint);
-  LABEL2Right = individual2.label.slice(randomPoint);
-  newLabel = LABEL1Left.concat(LABEL2Right);
-
   XY1 = generateDirection(combineXYCoordinatesIntoArray(individual1.X, individual1.Y));
   XY2 = generateDirection(combineXYCoordinatesIntoArray(individual2.X, individual2.Y));
   XY1Left = XY1.slice(0, randomPoint);
