@@ -200,70 +200,148 @@ function generateSecondPopulation(eliteRate, crossOverRate, populationSize, popu
     rouletteSelection1 = rouletteWheelSelection(population1, totalFitnessScore);
     rouletteSelection2 = rouletteWheelSelection(population1, totalFitnessScore);
     crossedOverPopulation = doCrossOver(rouletteSelection1, rouletteSelection2);
-    newCrossedOverPopulation = newCrossedOverPopulation.concat(crossedOverPopulation);
+    console.log(crossedOverPopulation);
+    // newCrossedOverPopulation = newCrossedOverPopulation.concat(crossedOverPopulation);
   }
-  test = population2.concat(newCrossedOverPopulation);
-  console.log(test);
+  // test = population2.concat(newCrossedOverPopulation);
+  // console.log(test);
 }
 
 function doCrossOver(individual1, individual2) {
-  collision = true;
-  // while (collision) {
   randomPoint = generateRandomNumber(individual1.X.length - 1);
-  XY1 = combineXYCoordinatesIntoArray(individual1.X, individual1.Y);
-  XY2 = combineXYCoordinatesIntoArray(individual2.X, individual2.Y);
-  console.log(randomPoint, XY1, XY2);
-  XY1Left = XY1.slice(0, randomPoint);
-  XY1Right = XY1.slice(randomPoint);
-  XY2Right = XY2.slice(randomPoint);
+
   LABEL1Left = individual1.label.slice(0, randomPoint);
   LABEL2Right = individual2.label.slice(randomPoint);
-  newLabel1 = LABEL1Left.concat(LABEL2Right);
+  newLabel = LABEL1Left.concat(LABEL2Right);
 
-  difference = getDifferenceBetweenCoordinates(XY1Right[0][0], XY1Right[0][1], XY2Right[0][0], XY2Right[0][1]);
-  newXY2Right = XY2Right.map((value) => {
-    return [value[0] + difference[0], value[1] + difference[1]];
+  XY1 = generateDirection(combineXYCoordinatesIntoArray(individual1.X, individual1.Y));
+  XY2 = generateDirection(combineXYCoordinatesIntoArray(individual2.X, individual2.Y));
+  XY1Left = XY1.slice(0, randomPoint);
+  XY1Right = XY1.slice(randomPoint);
+  XY2Left = XY2.slice(0, randomPoint);
+  XY2Right = XY2.slice(randomPoint);
+  angles = [90, 180, 270];
+  rotation1 = [];
+  rotation2 = [];
+  angles.forEach((angle) => {
+    rotation1.push([rotateCoordinates(XY1Right, angle)]);
+    rotation2.push([rotateCoordinates(XY2Right, angle)]);
   });
-
-  checkForCollisionForFirstCrossOver = checkForCollision(XY1Left, newXY2Right);
-  if (checkForCollisionForFirstCrossOver) {
-    // first rotate 90
-    rotatenewXY2Right90 = newXY2Right.map((val) => {
-      return rotate(newXY2Right[0][0], newXY2Right[0][1], val[0], val[1], 90);
-    });
-    checkForCollisionAfter90 = checkForCollision(XY1Left, rotatenewXY2Right90);
-    if (checkForCollisionAfter90) {
-      // first rotate 180
-      rotatenewXY2Right180 = newXY2Right.map((val) => {
-        return rotate(newXY2Right[0][0], newXY2Right[0][1], val[0], val[1], 180);
-      });
-      checkForCollisionAfter180 = checkForCollision(XY1Left, rotatenewXY2Right180);
-      if (checkForCollisionAfter180) {
-        // first rotate 270
-        rotatenewXY2Right270 = newXY2Right.map((val) => {
-          return rotate(newXY2Right[0][0], newXY2Right[0][1], val[0], val[1], 270);
-        });
-        checkForCollisionAfter270 = checkForCollision(XY1Left, rotatenewXY2Right270);
-        if (checkForCollisionAfter270) {
-          console.log('no');
-          // continue;
-        } else {
-          collision = false;
-          return composeCrossoverReturnStructure(checkForCollisionAfter270.X, checkForCollisionAfter270.Y, newLabel1);
-        }
-      } else {
-        collision = false;
-        return composeCrossoverReturnStructure(checkForCollisionAfter180.X, checkForCollisionAfter180.Y, newLabel1);
-      }
-    } else {
-      collision = false;
-      return composeCrossoverReturnStructure(checkForCollisionAfter90.X, checkForCollisionAfter90.Y, newLabel1);
-    }
-  } else {
-    collision = false;
-    return composeCrossoverReturnStructure(checkForCollisionForFirstCrossOver.X, checkForCollisionForFirstCrossOver.Y, newLabel1);
+  children = [];
+  crossOveredChromosomes = [];
+  for (rotat = 0; rotat < rotation1.length; rotat++) {
+    children.push(XY1Left.concat(rotation2[rotat]));
+    children.push(XY2Left.concat(rotation1[rotat]));
   }
-  // }
+
+  for (child = 0; child < children.length; child++) {
+    if (checkCollison(children[child])) {
+      continue;
+    } else {
+      crossOveredChromosomes.push(generateCoords(children[child]));
+    }
+  }
+  return crossOveredChromosomes;
+}
+
+function checkCollison(sequence) {
+  combination = generateCoords(sequence);
+  XYCoordinates = [];
+  for (i = 0; i < combination.length; i++) {
+    XYCoordinates[i] = combination[i][0] + ',' + combination[i][1];
+  }
+  if (typeof findDuplicate(XYCoordinates) == 'undefined') {
+    return false;
+  }
+  return true;
+}
+
+function rotateCoordinates(chromosomes, angle = 90) {
+  str = '';
+  for (chr = 0; chr < chromosomes.length; chr++) {
+    if (angle == 90) {
+      if (chromosomes.charAt(chr) == 'R') {
+        str += 'U';
+      }
+      if (chromosomes.charAt(chr) == 'L') {
+        str += 'D';
+      }
+      if (chromosomes.charAt(chr) == 'U') {
+        str += 'L';
+      }
+      if (chromosomes.charAt(chr) == 'D') {
+        str += 'R';
+      }
+    }
+    if (angle == 180) {
+      if (chromosomes.charAt(chr) == 'R') {
+        str += 'L';
+      }
+      if (chromosomes.charAt(chr) == 'L') {
+        str += 'R';
+      }
+      if (chromosomes.charAt(chr) == 'U') {
+        str += 'D';
+      }
+      if (chromosomes.charAt(chr) == 'D') {
+        str += 'U';
+      }
+    }
+    if (angle == 270) {
+      if (chromosomes.charAt(chr) == 'R') {
+        str += 'D';
+      }
+      if (chromosomes.charAt(chr) == 'L') {
+        str += 'U';
+      }
+      if (chromosomes.charAt(chr) == 'U') {
+        str += 'R';
+      }
+      if (chromosomes.charAt(chr) == 'D') {
+        str += 'L';
+      }
+    }
+  }
+  return str;
+}
+
+function generateCoords(sequence) {
+  coordinates = [];
+  coordinates[0] = [0, 0];
+  coord = [0, 0];
+  for (seq = 0; seq < sequence.length; seq++) {
+    if (sequence.charAt(seq) == 'R') {
+      coord[0] += 1;
+    } else if (sequence.charAt(seq) == 'L') {
+      coord[0] -= 1;
+    } else if (sequence.charAt(seq) == 'U') {
+      coord[1] += 1;
+    } else if (sequence.charAt(seq) == 'D') {
+      coord[1] -= 1;
+    } else {
+      console.log('error');
+      break;
+    }
+    coordinates.push([coord[0], coord[1]]);
+  }
+  return coordinates;
+}
+
+function generateDirection(coordinates) {
+  coord_0 = coordinates[0];
+  sequences = '';
+  for (seq = 1; seq < coordinates.length; seq++) {
+    if (coordinates[seq][0] > coordinates[seq - 1][0]) {
+      sequences += 'R';
+    } else if (coordinates[seq][0] < coordinates[seq - 1][0]) {
+      sequences += 'L';
+    } else if (coordinates[seq][1] > coordinates[seq - 1][1]) {
+      sequences += 'U';
+    } else if (coordinates[seq][1] < coordinates[seq - 1][1]) {
+      sequences += 'D';
+    }
+  }
+  return sequences;
 }
 
 function checkForCollision(XYLeft, XYRight) {
@@ -293,18 +371,18 @@ function composeCrossoverReturnStructure(X, Y, label) {
   return [structure];
 }
 
-function rotate(cx, cy, x, y, angle) {
-  var radians = (Math.PI / 180) * angle,
-    cos = Math.cos(radians),
-    sin = Math.sin(radians),
-    nx = cos * (x - cx) + sin * (y - cy) + cx,
-    ny = cos * (y - cy) - sin * (x - cx) + cy;
-  return [Math.round(nx), Math.round(ny)];
-}
+// function rotate(cx, cy, x, y, angle) {
+//   var radians = (Math.PI / 180) * angle,
+//     cos = Math.cos(radians),
+//     sin = Math.sin(radians),
+//     nx = cos * (x - cx) + sin * (y - cy) + cx,
+//     ny = cos * (y - cy) - sin * (x - cx) + cy;
+//   return [Math.round(nx), Math.round(ny)];
+// }
 
-function getDifferenceBetweenCoordinates(X1, Y1, X2, Y2) {
-  return [X1 - X2, Y1 - Y2];
-}
+// function getDifferenceBetweenCoordinates(X1, Y1, X2, Y2) {
+//   return [X1 - X2, Y1 - Y2];
+// }
 
 function rouletteWheelSelection(genomesArr, totalFitnessScore) {
   var total = 0;
@@ -486,3 +564,67 @@ function plotGraph(coordinates, colors, label) {
 
   Plotly.newPlot('graphDiv', data, layout, { showSendToCloud: true });
 }
+
+// function doCrossOver(individual1, individual2) {
+//   collision = true;
+//   // while (collision) {
+//   randomPoint = generateRandomNumber(individual1.X.length - 1);
+//   XY1 = combineXYCoordinatesIntoArray(individual1.X, individual1.Y);
+//   XY2 = combineXYCoordinatesIntoArray(individual2.X, individual2.Y);
+//   console.log(randomPoint, XY1, XY2);
+//   XY1Left = XY1.slice(0, randomPoint);
+//   XY1Right = XY1.slice(randomPoint);
+//   XY2Right = XY2.slice(randomPoint);
+//   LABEL1Left = individual1.label.slice(0, randomPoint);
+//   LABEL2Right = individual2.label.slice(randomPoint);
+//   newLabel1 = LABEL1Left.concat(LABEL2Right);
+
+//   difference = getDifferenceBetweenCoordinates(XY1Right[0][0], XY1Right[0][1], XY2Right[0][0], XY2Right[0][1]);
+//   newXY2Right = XY2Right.map((value) => {
+//     return [value[0] + difference[0], value[1] + difference[1]];
+//   });
+
+//   checkForCollisionForFirstCrossOver = checkForCollision(XY1Left, newXY2Right);
+//   if (checkForCollisionForFirstCrossOver) {
+//     // first rotate 90
+//     rotatenewXY2Right90 = newXY2Right.map((val) => {
+//       return rotate(newXY2Right[0][0], newXY2Right[0][1], val[0], val[1], 90);
+//     });
+//     checkForCollisionAfter90 = checkForCollision(XY1Left, rotatenewXY2Right90);
+//     if (checkForCollisionAfter90) {
+//       // first rotate 180
+//       rotatenewXY2Right180 = newXY2Right.map((val) => {
+//         return rotate(newXY2Right[0][0], newXY2Right[0][1], val[0], val[1], 180);
+//       });
+//       checkForCollisionAfter180 = checkForCollision(XY1Left, rotatenewXY2Right180);
+//       if (checkForCollisionAfter180) {
+//         // first rotate 270
+//         rotatenewXY2Right270 = newXY2Right.map((val) => {
+//           return rotate(newXY2Right[0][0], newXY2Right[0][1], val[0], val[1], 270);
+//         });
+//         checkForCollisionAfter270 = checkForCollision(XY1Left, rotatenewXY2Right270);
+//         if (checkForCollisionAfter270) {
+//           console.log('no');
+//           // continue;
+//         } else {
+//           collision = false;
+//           console.log(checkForCollisionAfter270, '270');
+//           return composeCrossoverReturnStructure(checkForCollisionAfter270.X, checkForCollisionAfter270.Y, newLabel1);
+//         }
+//       } else {
+//         collision = false;
+//         console.log(checkForCollisionAfter180, '180');
+//         return composeCrossoverReturnStructure(checkForCollisionAfter180.X, checkForCollisionAfter180.Y, newLabel1);
+//       }
+//     } else {
+//       collision = false;
+//       console.log(checkForCollisionAfter90, '90');
+//       return composeCrossoverReturnStructure(checkForCollisionAfter90.X, checkForCollisionAfter90.Y, newLabel1);
+//     }
+//   } else {
+//     collision = false;
+//     console.log(checkForCollisionForFirstCrossOver, 'first');
+//     return composeCrossoverReturnStructure(checkForCollisionForFirstCrossOver.X, checkForCollisionForFirstCrossOver.Y, newLabel1);
+//   }
+//   // }
+// }
