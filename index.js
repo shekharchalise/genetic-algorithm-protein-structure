@@ -1,4 +1,4 @@
-var populationSize = 100;
+var populationSize = 10;
 var proteinLength = 64;
 var eliteRate = 10;
 var crossOverRate = 80;
@@ -16,8 +16,9 @@ function main() {
   if (sortedPopulation) {
     crossedOverPop = generateSecondPopulationAfterCrossover(eliteRate, crossOverRate, populationSize, sortedPopulation, label, proteinLength);
     sortedCrossedOver = crossedOverPop.sort(sortPopulation);
-    console.log(sortedCrossedOver);
-    mutatedPopulation = generateSecondPopulationAfterMutation(sortedCrossedOver, mutationRate);
+    mutatePopu = sortedPopulation.slice((mutationRate / 100) * populationSize);
+    console.log(mutatePopu);
+    mutatedPopulation = generateSecondPopulationAfterMutation(mutatePopu, mutationRate, label);
     // Plot the graph
     colors = getColorsForProtein(sortedCrossedOver[0].label);
     plotGraph([sortedCrossedOver[0].X, sortedCrossedOver[0].Y], colors, sortedCrossedOver[0].label);
@@ -269,7 +270,58 @@ function doCrossOver(individual1, individual2) {
   return crossOveredChromosomes;
 }
 
-function generateSecondPopulationAfterMutation(crossedOverPopu, mutationRate) {}
+function generateSecondPopulationAfterMutation(population, mutationRate, label) {
+  var mutateRate = Math.ceil((mutationRate / 100) * populationSize);
+  var mutatedPop = [];
+  popAfterRotation = [];
+  population.forEach((pop) => {
+    direction = generateDirection(combineXYCoordinatesIntoArray(pop.X, pop.Y));
+    randomnum = generateRandomNumber(direction.length);
+    directionAtRandomPt = direction.charAt(randomnum);
+    nextDirection = getRandomDirection(directionAtRandomPt);
+    charsBefore = direction.slice(0, randomnum);
+    charsAfter = direction.slice(randomnum + 1);
+    rotatedCharAfter = [];
+    angles = [90, 180, 270];
+    angles.forEach((angle) => {
+      rotate = rotateCoordinates(charsAfter, angle);
+      rotation = rotatedCharAfter.push([rotate]);
+      popAfterRotation.push(charsBefore + nextDirection + rotate);
+    });
+  });
+  for (mut = 0; mut < popAfterRotation.length; mut++) {
+    if (!checkCollison(popAfterRotation[mut])) {
+      mutatedPop.push(popAfterRotation[mut]);
+    }
+  }
+
+  mutatedPop = mutatedPop.map((val) => {
+    convertToCoord = generateCoords(val);
+    X = [];
+    Y = [];
+    test = [];
+    for (v = 0; v < convertToCoord.length; v++) {
+      X[v] = convertToCoord[v][0];
+      Y[v] = convertToCoord[v][1];
+    }
+    return { X: X, Y: Y, label: label, fitness: computeFitness(X, Y, label), XY: getXYCoordinatesWithLabels(X, Y, label) };
+  });
+  mutatedPop = mutatedPop.sort(sortPopulation);
+  return mutatedPop.slice(0, mutateRate);
+}
+
+function getRandomDirection(dir) {
+  randDir = [];
+  if (dir == 'R' || dir == 'L') {
+    randDir = ['U', 'D'];
+  } else if (dir == 'U' || dir == 'D') {
+    randDir = ['R', 'L'];
+  } else {
+    console.log('error');
+  }
+  num = Math.floor(Math.random() * 2);
+  return randDir[num];
+}
 
 function checkCollison(sequence) {
   combination = generateCoords(sequence);
