@@ -1,16 +1,17 @@
 var populationSize = 100;
-var proteinLength = 64;
 var eliteRate = 10;
 var crossOverRate = 80;
 var mutationRate = 5;
 var numberOfGeneration = 100;
+var sequence = 'pphpphhpphhppppphhhhhhhhhhpppppphhpphhpphpphhhhh';
+var label = sequence.split('');
+var proteinLength = label.length;
 
 $(document).ready(function() {
   main();
 });
 
 function main() {
-  label = generateRandomPopulation(proteinLength);
   population = getPopulation(populationSize, proteinLength, label);
 
   for (iteration = 0; iteration < numberOfGeneration; iteration++) {
