@@ -15,6 +15,7 @@ function main() {
 
   for (iteration = 0; iteration < numberOfGeneration; iteration++) {
     sortedPopulation = population.sort(sortPopulation);
+    var population2;
     if (sortedPopulation) {
       crossedOverPop = generateSecondPopulationAfterCrossover(eliteRate, crossOverRate, populationSize, sortedPopulation, label, proteinLength);
       sortedCrossedOver = crossedOverPop.sort(sortPopulation);
@@ -33,10 +34,11 @@ function main() {
       population2 = addEliteAndMutatedPopulation(elitPopulation, mutatePopu);
       population = population2;
     }
+    console.log('Generation ' + iteration + ' Max Fitness -' + population[0].fitness);
   }
   colors = getColorsForProtein(population[0].label);
   plotGraph([population[0].X, population[0].Y], colors, population[0].label);
-  alert('MAX iteration reached and fitness is -' + population[0].fitness);
+  alert('MAX Iteration reached and fitness is -' + population[0].fitness);
 }
 
 function getPopulation(populationSize, proteinLength, label) {
