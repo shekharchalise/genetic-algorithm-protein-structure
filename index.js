@@ -16,12 +16,12 @@ function main() {
   if (sortedPopulation) {
     crossedOverPop = generateSecondPopulationAfterCrossover(eliteRate, crossOverRate, populationSize, sortedPopulation, label, proteinLength);
     sortedCrossedOver = crossedOverPop.sort(sortPopulation);
-    mutatePopu = sortedPopulation.slice((mutationRate / 100) * populationSize);
-    console.log(mutatePopu);
-    mutatedPopulation = generateSecondPopulationAfterMutation(mutatePopu, mutationRate, label);
+    mutatePopu = sortedPopulation.slice((eliteRate / 100) * populationSize); //except elite population
+    mutatedPopulation = mutation(mutatePopu, mutationRate, label);
+    console.log(mutatedPopulation);
     // Plot the graph
-    colors = getColorsForProtein(sortedCrossedOver[0].label);
-    plotGraph([sortedCrossedOver[0].X, sortedCrossedOver[0].Y], colors, sortedCrossedOver[0].label);
+    colors = getColorsForProtein(mutatedPopulation[0].label);
+    plotGraph([mutatedPopulation[0].X, mutatedPopulation[0].Y], colors, mutatedPopulation[0].label);
   }
 }
 
@@ -270,7 +270,7 @@ function doCrossOver(individual1, individual2) {
   return crossOveredChromosomes;
 }
 
-function generateSecondPopulationAfterMutation(population, mutationRate, label) {
+function mutation(population, mutationRate, label) {
   var mutateRate = Math.ceil((mutationRate / 100) * populationSize);
   var mutatedPop = [];
   popAfterRotation = [];
