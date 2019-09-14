@@ -1,8 +1,9 @@
-var populationSize = 10;
+var populationSize = 100;
 var proteinLength = 64;
 var eliteRate = 10;
 var crossOverRate = 80;
 var mutationRate = 5;
+var numberOfGeneration = 100;
 
 $(document).ready(function() {
   main();
@@ -11,18 +12,31 @@ $(document).ready(function() {
 function main() {
   label = generateRandomPopulation(proteinLength);
   population = getPopulation(populationSize, proteinLength, label);
-  sortedPopulation = population.sort(sortPopulation);
 
-  if (sortedPopulation) {
-    crossedOverPop = generateSecondPopulationAfterCrossover(eliteRate, crossOverRate, populationSize, sortedPopulation, label, proteinLength);
-    sortedCrossedOver = crossedOverPop.sort(sortPopulation);
-    mutatePopu = sortedPopulation.slice((eliteRate / 100) * populationSize); //except elite population
-    mutatedPopulation = mutation(mutatePopu, mutationRate, label);
-    console.log(mutatedPopulation);
-    // Plot the graph
-    colors = getColorsForProtein(mutatedPopulation[0].label);
-    plotGraph([mutatedPopulation[0].X, mutatedPopulation[0].Y], colors, mutatedPopulation[0].label);
+  for (iteration = 0; iteration < numberOfGeneration; iteration++) {
+    sortedPopulation = population.sort(sortPopulation);
+    if (sortedPopulation) {
+      crossedOverPop = generateSecondPopulationAfterCrossover(eliteRate, crossOverRate, populationSize, sortedPopulation, label, proteinLength);
+      sortedCrossedOver = crossedOverPop.sort(sortPopulation);
+      sortedCrossedElite = sortedCrossedOver.slice(0, (eliteRate / 100) * populationSize);
+      mutatePopu = sortedCrossedOver.slice((eliteRate / 100) * populationSize); //except elite population from crossover
+      shufflePop = shuffle(mutatePopu); //shuffle the population
+      getRandomPopForMutation = shufflePop.slice(0, (mutationRate / 100) * populationSize);
+      var mutateLength = 0;
+      while (mutateLength != (mutationRate / 100) * populationSize) {
+        mutatedPopulation = mutation(getRandomPopForMutation, mutationRate, label);
+        mutateLength = mutatedPopulation.length;
+      }
+      for (x = 0; x < mutatedPopulation.length; x++) {
+        mutatePopu[x] = mutatedPopulation[x];
+      }
+      population2 = addEliteAndMutatedPopulation(elitPopulation, mutatePopu);
+      population = population2;
+    }
   }
+  colors = getColorsForProtein(population[0].label);
+  plotGraph([population[0].X, population[0].Y], colors, population[0].label);
+  alert('MAX iteration reached and fitness is -' + population[0].fitness);
 }
 
 function getPopulation(populationSize, proteinLength, label) {
@@ -51,6 +65,17 @@ function getPopulation(populationSize, proteinLength, label) {
   // return new Promise((resolve, reject) => {
   //   resolve(population);
   // });
+}
+
+function shuffle(a) {
+  var j, x, i;
+  for (i = a.length - 1; i > 0; i--) {
+    j = Math.floor(Math.random() * (i + 1));
+    x = a[i];
+    a[i] = a[j];
+    a[j] = x;
+  }
+  return a;
 }
 
 function getRandomOrientation(proteinLength) {
@@ -225,13 +250,13 @@ function generateSecondPopulationAfterCrossover(eliteRate, crossOverRate, popula
   crossedOverPopu = sortNewCrossedOverPopulation.slice(0, crossOverLoopLimit);
   addRandomPopRate = 100 - eliteRate - crossOverRate;
   noOfRandomPop = (addRandomPopRate / 100) * populationSize;
-  remainingRandomPopulation = getPopulation(noOfRandomPop, proteinLength, label);
   elitPopulation.forEach((elite) => {
     population2.push(elite);
   });
   crossedOverPopu.forEach((crossed) => {
     population2.push(crossed);
   });
+  remainingRandomPopulation = getPopulation(noOfRandomPop, proteinLength, label);
   remainingRandomPopulation.forEach((remains) => {
     population2.push(remains);
   });
@@ -316,8 +341,6 @@ function getRandomDirection(dir) {
     randDir = ['U', 'D'];
   } else if (dir == 'U' || dir == 'D') {
     randDir = ['R', 'L'];
-  } else {
-    console.log('error');
   }
   num = Math.floor(Math.random() * 2);
   return randDir[num];
@@ -397,9 +420,6 @@ function generateCoords(sequence) {
       coord[1] += 1;
     } else if (sequence.charAt(seq) == 'D') {
       coord[1] -= 1;
-    } else {
-      console.log('error');
-      break;
     }
     coordinates.push([coord[0], coord[1]]);
   }
@@ -432,7 +452,6 @@ function checkForCollision(XYLeft, XYRight) {
     Y1[ind] = concatinate[ind][1];
   }
   coord = getXYCoordinatesWithoutLabels(X1, Y1);
-  console.log(findDuplicate(coord));
   if (typeof findDuplicate(coord) == 'undefined') {
     return { X: X1, Y: Y1 };
   }
@@ -496,6 +515,13 @@ function sortPopulation(a, b) {
     comparison = -1;
   }
   return comparison * -1;
+}
+
+function addEliteAndMutatedPopulation(elit, mutate) {
+  pop2 = elit.forEach((val) => {
+    mutate.push(val);
+  });
+  return mutate.sort(sortPopulation);
 }
 
 function generateRandomNumber(limit) {
