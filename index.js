@@ -1,45 +1,104 @@
-var populationSize = 100;
-var eliteRate = 10;
-var crossOverRate = 80;
-var mutationRate = 5;
-var numberOfGeneration = 100;
-var sequence = 'pphpphhpphhppppphhhhhhhhhhpppppphhpphhpphpphhhhh';
-var label = sequence.split('');
-var proteinLength = label.length;
+var populationSize;
+var eliteRate;
+var crossOverRate;
+var mutationRate;
+var numberOfGeneration;
+var sequence;
+var label;
+var proteinLength;
+var seriesOfSequence;
 
-$(document).ready(function() {
-  main();
-});
+function getInputsForGA() {
+  populationSize = document.getElementById('populationSize').value;
+  eliteRate = document.getElementById('eliteRate').value;
+  crossOverRate = document.getElementById('crossOverRate').value;
+  mutationRate = document.getElementById('mutationRate').value;
+  numberOfGeneration = document.getElementById('numberOfGeneration').value;
+  sequenceValue = document.getElementById('sequence').value;
+  fileInput = document.getElementById('fileInput').files[0];
+  if (fileInput) {
+    var reader = new FileReader();
+    reader.readAsText(fileInput, 'UTF-8');
+    reader.onload = function(evt) {
+      inputSequence = readFromFile(evt.target.result.split('\n')).then((s) => {
+        console.log(true);
+        window.seriesOfSequence = s;
+      });
+    };
+    reader.onerror = function(evt) {
+      alert('error reading file');
+    };
+  } else {
+    window.seriesOfSequence = [[sequenceValue]];
+  }
+  const sleep = (milliseconds) => {
+    return new Promise((resolve) => setTimeout(resolve, milliseconds));
+  };
+  sleep(800).then(() => {
+    main();
+  });
+}
+
+function readFromFile(fileContents) {
+  totalProtein = fileContents[0].split('= ')[1];
+  fitness = [];
+  seq = [];
+  fitnessAndSequence = [];
+  for (i = 1; i <= totalProtein * 2; i++) {
+    fitnessOrSeq = fileContents[i].split('= ')[1];
+    if (i % 2) {
+      //if odd
+      seq.push(fitnessOrSeq);
+    } else {
+      fitness.push(fitnessOrSeq);
+    }
+  }
+  for (j = 0; j < fitness.length; j++) {
+    fitnessAndSequence.push([seq[j].trim(), parseInt(fitness[j], 10)]);
+  }
+  return new Promise((resolve, reject) => {
+    resolve(fitnessAndSequence);
+  });
+}
 
 function main() {
-  population = getPopulation(populationSize, proteinLength, label);
+  for (series = 0; series < seriesOfSequence.length; series++) {
+    label = seriesOfSequence[series][0].split('');
+    proteinLength = label.length;
+    population = getPopulation(populationSize, proteinLength, label);
 
-  for (iteration = 0; iteration < numberOfGeneration; iteration++) {
-    sortedPopulation = population.sort(sortPopulation);
-    var population2;
-    if (sortedPopulation) {
-      crossedOverPop = generateSecondPopulationAfterCrossover(eliteRate, crossOverRate, populationSize, sortedPopulation, label, proteinLength);
-      sortedCrossedOver = crossedOverPop.sort(sortPopulation);
-      sortedCrossedElite = sortedCrossedOver.slice(0, (eliteRate / 100) * populationSize);
-      mutatePopu = sortedCrossedOver.slice((eliteRate / 100) * populationSize); //except elite population from crossover
-      shufflePop = shuffle(mutatePopu); //shuffle the population
-      getRandomPopForMutation = shufflePop.slice(0, (mutationRate / 100) * populationSize);
-      var mutateLength = 0;
-      while (mutateLength != (mutationRate / 100) * populationSize) {
-        mutatedPopulation = mutation(getRandomPopForMutation, mutationRate, label);
-        mutateLength = mutatedPopulation.length;
+    for (iteration = 0; iteration < numberOfGeneration; iteration++) {
+      sortedPopulation = population.sort(sortPopulation);
+      var population2;
+      if (sortedPopulation) {
+        crossedOverPop = generateSecondPopulationAfterCrossover(eliteRate, crossOverRate, populationSize, sortedPopulation, label, proteinLength);
+        sortedCrossedOver = crossedOverPop.sort(sortPopulation);
+        sortedCrossedElite = sortedCrossedOver.slice(0, (eliteRate / 100) * populationSize);
+        mutatePopu = sortedCrossedOver.slice((eliteRate / 100) * populationSize); //except elite population from crossover
+        shufflePop = shuffle(mutatePopu); //shuffle the population
+        getRandomPopForMutation = shufflePop.slice(0, (mutationRate / 100) * populationSize);
+        var mutateLength = 0;
+        while (mutateLength != (mutationRate / 100) * populationSize) {
+          mutatedPopulation = mutation(getRandomPopForMutation, mutationRate, label);
+          mutateLength = mutatedPopulation.length;
+        }
+        for (x = 0; x < mutatedPopulation.length; x++) {
+          mutatePopu[x] = mutatedPopulation[x];
+        }
+        population2 = addEliteAndMutatedPopulation(elitPopulation, mutatePopu);
+        population = population2;
       }
-      for (x = 0; x < mutatedPopulation.length; x++) {
-        mutatePopu[x] = mutatedPopulation[x];
-      }
-      population2 = addEliteAndMutatedPopulation(elitPopulation, mutatePopu);
-      population = population2;
+      console.log('Generation ' + iteration + ' Fitness: -' + population[0].fitness + ' Sequence: ' + seriesOfSequence[series][0]);
     }
-    console.log('Generation ' + iteration + ' Max Fitness -' + population[0].fitness);
+    colors = getColorsForProtein(population[0].label);
+    plotGraph([population[0].X, population[0].Y], colors, population[0].label);
+    console.log('--------------------------------------------Completed Sequence--------------------------------------------------------------------');
+    if (!seriesOfSequence[series][1]) {
+      alert('Maximum Iteration reached. Calculated Fitness: -' + population[0].fitness + ' Sequence: ' + seriesOfSequence[series][0]);
+    } else {
+      alert('Maximum Iteration reached. Calculated Fitness: -' + population[0].fitness + ' Sequence: ' + seriesOfSequence[series][0] + ' Targeted Fitness: ' + seriesOfSequence[series][1]);
+    }
   }
-  colors = getColorsForProtein(population[0].label);
-  plotGraph([population[0].X, population[0].Y], colors, population[0].label);
-  alert('MAX Iteration reached and fitness is -' + population[0].fitness);
 }
 
 function getPopulation(populationSize, proteinLength, label) {

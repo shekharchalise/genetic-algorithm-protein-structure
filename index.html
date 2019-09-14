@@ -26,51 +26,55 @@
             <div class="input-group-prepend">
               <span class="input-group-text" id="basic-addon1">Number Of Generations</span>
             </div>
-            <input type="text" class="form-control" value="1000" aria-label="Number of Generations" aria-describedby="basic-addon1" />
+            <input type="text" class="form-control" value="50" aria-label="Number of Generations" aria-describedby="basic-addon1" id="numberOfGeneration" />
           </div>
           <div class="input-group mb-3">
             <div class="input-group-prepend">
               <span class="input-group-text" id="basic-addon1">Population Size</span>
             </div>
-            <input type="text" class="form-control" value="100" aria-label="Population Size" aria-describedby="basic-addon1" />
+            <input type="text" class="form-control" value="100" aria-label="Population Size" aria-describedby="basic-addon1" id="populationSize" />
           </div>
           <div class="input-group mb-3">
             <div class="input-group-prepend">
               <span class="input-group-text" id="basic-addon1">Cross Over Rate</span>
             </div>
-            <input type="text" class="form-control" value="80" aria-label="Cross Over Rate" aria-describedby="basic-addon1" />
+            <input type="text" class="form-control" value="80" aria-label="Cross Over Rate" aria-describedby="basic-addon1" id="crossOverRate" />
           </div>
           <div class="input-group mb-3">
             <div class="input-group-prepend">
               <span class="input-group-text" id="basic-addon1">Elite Rate</span>
             </div>
-            <input type="text" class="form-control" value="10" aria-label="Elite Rate" aria-describedby="basic-addon1" />
+            <input type="text" class="form-control" value="10" aria-label="Elite Rate" aria-describedby="basic-addon1" id="eliteRate" />
           </div>
           <div class="input-group mb-3">
             <div class="input-group-prepend">
               <span class="input-group-text" id="basic-addon1">Mutation Rate</span>
             </div>
-            <input type="text" class="form-control" value="50" aria-label="Mutation Rate" aria-describedby="basic-addon1" />
+            <input type="text" class="form-control" value="50" aria-label="Mutation Rate" aria-describedby="basic-addon1" id="mutationRate" />
           </div>
         </div>
         <div class="col-md-6">
-          <div class="input-group mb-3">
-            <div class="input-group-prepend">
-              <span class="input-group-text" id="basic-addon1">Protein Structure</span>
+          <div id="selectInputType">
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="structureSelection" id="exampleRadios1" value="text-input" checked />
+              <div class="input-group mb-3">
+                <div class="input-group-prepend">
+                  <span class="input-group-text" id="basic-addon1">Protein Structure</span>
+                </div>
+                <input type="text" class="form-control" value="pphpphhpphhppppphhhhhhhhhhpppppphhpphhpphpphhhhh" aria-label="Protein Structure" aria-describedby="basic-addon1" id="sequence" />
+              </div>
             </div>
-            <input type="text" class="form-control" value="" aria-label="Protein Structure" aria-describedby="basic-addon1" />
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="structureSelection" value="file-input" />
+              <div class="input-group mb-3">
+                <div class="form-group">
+                  <input type="file" class="form-control-file" id="fileInput" />
+                </div>
+              </div>
+            </div>
           </div>
           <div class="input-group mb-3">
-            <div class="input-group-prepend">
-              <span class="input-group-text" id="inputGroupFileAddon01">Upload</span>
-            </div>
-            <div class="custom-file">
-              <input type="file" class="custom-file-input" id="inputGroupFile01" aria-describedby="inputGroupFileAddon01" />
-              <label class="custom-file-label" for="inputGroupFile01">Choose file</label>
-            </div>
-          </div>
-          <div class="input-group mb-3">
-            <button type="button" class="btn btn-success">Start</button>
+            <button type="button" class="btn btn-success" onclick="getInputsForGA()">Start</button>
           </div>
         </div>
       </div>
