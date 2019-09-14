@@ -21,7 +21,6 @@ function getInputsForGA() {
     reader.readAsText(fileInput, 'UTF-8');
     reader.onload = function(evt) {
       inputSequence = readFromFile(evt.target.result.split('\n')).then((s) => {
-        console.log(true);
         window.seriesOfSequence = s;
       });
     };
